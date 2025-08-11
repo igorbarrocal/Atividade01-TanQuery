@@ -1,79 +1,49 @@
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Image, Button} from 'react-native';
-import { useQuery, useMutation } from '@tanstack/react-query';//Hook para fazer queries
-import { fetchPosts, createUser } from './api/posts'
+import React from 'react';
+import { SafeAreaView, FlatList, Text, StyleSheet, View, ActivityIndicator } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUsers } from './api/posts';
 
+export default function MainApp() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers
+  });
 
-export default function App() {
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>Carregando usuários...</Text>
+      </View>
+    );
+  }
 
-    const { data, isLoading, isError,error, isFetching,refetch } = useQuery({
-        queryKey: ['posts'], //Chave da query
-        queryFn: fetchPosts //Função que busca os dados
-    });
+  if (isError) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.error}>Erro ao carregar usuários</Text>
+      </View>
+    );
+  }
 
-    //Mutation para criar um novo usuário
-    const  mutation = useMutation({
-        mutationFn: createUser, //Função que cria o usuário
-        onSuccess: () => {
-            refetch(); //Refaz a query para atualizar a lista de usuários
-        }
-    })    
-    
-    const newUser = {
-        name: "Exemplo",
-        avatar: "https://avatars.githubusercontent.com/u/75419383"
-    }
-
-    //Exibe um carregando enquanto os dados não chegam
-    if (isLoading) {
-        return <ActivityIndicator size="large" style={styles.center} />
-    }
-
-    //Exibe um erro caso ocorra
-    if (isError) {
-        return (
-            <View>
-                <Text style={styles.center}>Erro ao carregar os dados</Text>
-                <Text style={styles.center}>{error.message}</Text>
-            </View>
-        )
-    }
-
-    return(
-        <>
-            <Button 
-                title={mutation.isPending?'Criando Usuario...':'Criar Novo Usuario'} 
-                onPress={() => mutation.mutate(newUser)}
-                disabled={mutation.isPending}
-            />
-            <FlatList
-                data={data}
-                refreshing={isFetching}//Mostra o spinner durante o refetch
-                onRefresh={refetch}//Chamada automatica do refetch ao puxar para baixo
-                renderItem={({item})=>(
-                    <View style={styles.item}> 
-                        <Text style={styles.title}>{item.name}</Text>
-                        <Image source={{uri: item.avatar}} style={{ width: 100, height: 100,}}></Image>
-                        
-                    </View> 
-                )}
-        />
-    </>
-    )
+  return (
+    <FlatList
+      data={data}
+      keyExtractor={(item) => String(item.id)}
+      renderItem={({ item }) => (
+        <View style={styles.card}>
+          <Text style={styles.name}>{item.name}</Text>
+          <Text>{item.email}</Text>
+          <Text>{item.address.city}</Text>
+        </View>
+      )}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
-    center:{
-        flex:1,
-        justifyContent:'center',
-        alignItems:'center'
-    },
-    item:{
-        padding:16,
-        borderBottomWidth:1,
-        borderBottomColor:'#ccc'
-    },
-    title:{
-        fontWeight:'bold',
-        marginBottom:4
-    }
-})
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  error: { color: 'red', fontSize: 16 },
+  card: { backgroundColor: '#fff', padding: 15, marginBottom: 10, borderRadius: 8, elevation: 2 },
+  name: { fontSize: 16, fontWeight: 'bold' }
+});

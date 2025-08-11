@@ -1,10 +1,12 @@
-import App from "./src/App";
-import QueryClientProvider  from "./src/QueryClientProvider";
+import React from 'react';
+import QueryClientProvider from './src/QueryClientProvider';
+import MainApp from './src/App';
 
-export default function Main(){
-  return(
+export default function App() {
+  return (
     <QueryClientProvider>
-      <App/>
+      <MainApp />
     </QueryClientProvider>
   );
 }
+
